@@ -277,6 +277,11 @@ h1, h2, h3, h4, h5, h6 {
   border-left: 4px solid var(--custom-olive-light);
 }
 
+.md-typeset .admonition.abstract {
+  background: rgba(74, 106, 94, 0.08);
+  border-left: 4px solid var(--custom-olive-light);
+}
+
 .md-footer {
   background: var(--custom-olive);
   color: var(--custom-cream);
@@ -346,4 +351,94 @@ h1, h2, h3, h4, h5, h6 {
   .md-typeset h2 {
     font-size: 1.5rem;
   }
+}
+
+/* --- Homepage custom styles --- */
+
+.md-typeset .hero-wrapper {
+  background: linear-gradient(135deg, var(--custom-olive) 0%, var(--custom-olive-light) 100%);
+  border-radius: 24px;
+  padding: 3rem;
+  margin: 1.5rem 0 2.5rem;
+  color: var(--custom-cream);
+}
+
+.md-typeset .hero-wrapper h1 {
+  color: var(--custom-cream) !important;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 2.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  border: none;
+  padding: 0;
+}
+
+.md-typeset .hero-wrapper p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0;
+  color: var(--custom-cream);
+}
+
+.md-typeset .features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.md-typeset .feature-card {
+  background: var(--custom-surface-low);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.md-typeset .feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 51, 44, 0.10);
+  background: var(--custom-surface-high);
+}
+
+.md-typeset .feature-card .card-title {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--custom-olive);
+  margin: 0 0 0.5rem;
+}
+
+.md-typeset .feature-card p {
+  font-size: 0.9rem;
+  color: var(--custom-text-mid);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.md-typeset .cta-section {
+  text-align: center;
+  padding: 2rem 0 1rem;
+}
+
+.md-typeset .cta-section .cta-button {
+  background: var(--custom-olive);
+  color: var(--custom-cream);
+  border-radius: 9999px;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s ease, transform 0.15s ease;
+  border: none;
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+}
+
+.md-typeset .cta-section .cta-button:hover {
+  background: var(--custom-terracotta);
+  transform: translateY(-1px);
+  color: var(--custom-cream);
+  text-decoration: none;
 }
