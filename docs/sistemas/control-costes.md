@@ -159,7 +159,7 @@ Conteo parcial pero frecuente de categorías específicas. Divide el almacén en
 
 ### 3.3 Plantilla de inventario
 
-La plantilla de Excel disponible en [assets/templates/](../assets/templates/) incluye:
+La plantilla de Excel disponible en [assets/templates/](../../assets/templates/) incluye:
 
 - Hoja de registro con categorías predefinidas.
 - Cálculo automático de valor de existencias.

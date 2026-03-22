@@ -64,13 +64,7 @@ nav:
       - Probar asistente: chat.html
 
 plugins:
-  - search:
-      prebuild_index: true
-      indexing: full
-      separator: '[\s\-\.]+'
-  - mkdocs-simple-hooks:
-      hooks:
-        on_page_markdown: "plugin.on_page_markdown"
+  - search
 
 markdown_extensions:
   - pymdownx.highlight:

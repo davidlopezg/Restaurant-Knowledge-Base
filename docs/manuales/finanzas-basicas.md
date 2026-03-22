@@ -91,7 +91,7 @@ Cuando la receta de un plato supera ese umbral, tienes tres opciones:
 ### 2.3 Herramientas de control
 
 - **Software de TPV con módulo de inventario**: ideal para restaurantes con alto volumen de ventas.
-- **Excel con plantilla de control**: suficiente para la mayoría de restaurantes medianos. Descarga una plantilla en [assets/templates/](../assets/templates/).
+- **Excel con plantilla de control**: suficiente para la mayoría de restaurantes medianos. Descarga una plantilla en [assets/templates/](../../assets/templates/).
 - **Revisión semanal** de los 10 productos con mayor coste (concentran generalmente el 70% del gasto).
 
 ---
@@ -284,7 +284,7 @@ Ejemplo:
 
 ## 8. Herramientas y plantillas
 
-Descarga las siguientes plantillas en [assets/templates/](../assets/templates/):
+Descarga las siguientes plantillas en [assets/templates/](../../assets/templates/):
 
 - **Control de food cost semanal.xlsx**: calcula food cost, identifica desviaciones y grafica la tendencia.
 - **Previsión de tesorería.xlsx**: modelo de flujo de caja a 12 semanas.

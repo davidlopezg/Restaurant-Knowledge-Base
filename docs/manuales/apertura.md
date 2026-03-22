@@ -232,7 +232,7 @@ Define tus métricas objetivo para los primeros **90 días**:
 | Rotación de personal | < 15% en los primeros 3 meses |
 | Margen operativo | Positivo desde el mes 4-6 |
 
-> **Referencia:** El documento de [Control de costes](sistemas/control-costes.md) explica cómo monitorizar estos indicadores.
+> **Referencia:** El documento de [Control de costes](../sistemas/control-costes.md) explica cómo monitorizar estos indicadores.
 
 ---
 

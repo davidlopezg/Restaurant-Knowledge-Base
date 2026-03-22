@@ -220,7 +220,7 @@ Registra siempre en la comanda:
 
 #### Cliente insatisfecho o conflicto
 
-> Consulta el manual completo de [Resolución de conflictos](https://davidlopezg.github.io/restaurant-knowledge-base/skills/resolucion-conflictos/) para el protocolo detallado.
+> Consulta el manual completo de [Resolución de conflictos](../skills/resolucion-conflictos.md) para el protocolo detallado.
 
 **Protocolo rápido:**
 
