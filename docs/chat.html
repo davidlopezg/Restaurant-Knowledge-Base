@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente IA - Knowledge Base Restaurantes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lunr@2.3.9/lunr.min.js"></script>
+    <style>
+        :root {
+            --olive: #325247;
+            --olive-light: #4a6a5e;
+            --olive-dark: #1e332c;
+            --terracotta: #9a5b35;
+            --cream: #fef9f1;
+            --surface-low: #f8f3eb;
+            --surface-mid: #ede8df;
+            --surface-high: #e7e2da;
+            --text-dark: #1e332c;
+            --text-mid: #4a4a42;
+            --text-light: #7a7a6e;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --shadow-sm: 0 2px 8px rgba(30, 51, 44, 0.06);
+            --shadow-md: 0 4px 20px rgba(30, 51, 44, 0.10);
+            --shadow-lg: 0 8px 40px rgba(30, 51, 44, 0.14);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+            scroll-behavior: smooth;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--olive) 0%, var(--olive-light) 100%);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title h1 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--cream);
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(254, 249, 241, 0.15);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-badge {
+            background: rgba(254, 249, 241, 0.2);
+            color: var(--cream);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(254, 249, 241, 0.3);
+        }
+
+        .back-link {
+            color: rgba(254, 249, 241, 0.8);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--cream);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 860px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .intro-card {
+            background: var(--surface-low);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .intro-card h2 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.6rem;
+            color: var(--olive);
+            margin-bottom: 0.75rem;
+        }
+
+        .intro-card p {
+            color: var(--text-mid);
+            font-size: 0.95rem;
+            line-height: 1.65;
+            max-width: 560px;
+            margin: 0 auto 1.25rem;
+        }
+
+        .example-queries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .example-chip {
+            background: var(--cream);
+            border: 1px solid var(--surface-high);
+            color: var(--text-mid);
+            font-size: 0.8rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-chip:hover {
+            background: var(--olive);
+            color: var(--cream);
+            border-color: var(--olive);
+        }
+
+        .chat-container {
+            background: var(--surface-low);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            min-height: 480px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--olive);
+            color: var(--cream);
+        }
+
+        .message.user .message-avatar {
+            background: var(--terracotta);
+            color: var(--cream);
+        }
+
+        .message-content {
+            background: var(--cream);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message.user .message-content {
+            background: var(--olive);
+            color: var(--cream);
+        }
+
+        .message-text {
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .message-text p {
+            margin-bottom: 0.75rem;
+        }
+
+        .message-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-text strong {
+            color: var(--olive);
+        }
+
+        .message.user .message-text strong {
+            color: var(--cream);
+        }
+
+        .message-text a {
+            color: var(--olive);
+            text-decoration: underline;
+            text-decoration-color: rgba(50, 82, 71, 0.3);
+        }
+
+        .message.user .message-text a {
+            color: var(--cream);
+            text-decoration-color: rgba(254, 249, 241, 0.4);
+        }
+
+        .citation {
+            background: var(--surface-low);
+            border-left: 3px solid var(--olive-light);
+            padding: 0.6rem 0.85rem;
+            margin-top: 0.75rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.8rem;
+            color: var(--text-mid);
+        }
+
+        .citation strong {
+            color: var(--olive);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .input-area {
+            padding: 1rem 1.5rem 1.5rem;
+            background: var(--cream);
+            border-top: 1px solid var(--surface-high);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .input-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--surface-low);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            resize: none;
+            min-height: 52px;
+            max-height: 160px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            line-height: 1.5;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(50, 82, 71, 0.4);
+            box-shadow: 0 0 0 3px rgba(50, 82, 71, 0.08);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-light);
+        }
+
+        .send-btn {
+            background: var(--olive);
+            color: var(--cream);
+            border: none;
+            border-radius: var(--radius-md);
+            width: 52px;
+            height: 52px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .send-btn:hover {
+            background: var(--terracotta);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:active {
+            transform: translateY(0);
+        }
+
+        .send-btn:disabled {
+            background: var(--surface-mid);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.25rem 0;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--text-light);
+            border-radius: 50%;
+            animation: typing 1.2s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--surface-mid);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .loading-state {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .loading-state .message-avatar {
+            background: var(--olive);
+            color: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-state .message-content {
+            background: var(--cream);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            min-width: 140px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            color: var(--text-light);
+            font-size: 0.78rem;
+        }
+
+        .footer a {
+            color: var(--olive);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .main {
+                padding: 1rem;
+            }
+            .message {
+                max-width: 92%;
+            }
+            .example-queries {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <div class="header-title">
+            <div class="header-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 1 0-1.898l3.24-3.242a4.5 4.5 0 0 1 4.765-.043Z"/>
+                </svg>
+            </div>
+            <h1>Asistente de Conocimiento</h1>
+            <span class="header-badge">v1.0</span>
+        </div>
+        <a class="back-link" href=".">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+            </svg>
+            Volver a la base de conocimiento
+        </a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="intro-card">
+        <h2>Pregunta en lenguaje natural</h2>
+        <p>El asistente busca en todos los manuales y te devuelve respuestas con cita directa al documento de origen. Prueba con una pregunta concreta.</p>
+        <div class="example-queries">
+            <span class="example-chip" data-query="¿Cómo calculo el food cost?">¿Cómo calculo el food cost?</span>
+            <span class="example-chip" data-query="Checklist de apertura">Checklist de apertura</span>
+            <span class="example-chip" data-query="Protocolo ante una alergia">Protocolo ante una alergia</span>
+            <span class="example-chip" data-query="¿Qué es el punto de equilibrio?">¿Qué es el punto de equilibrio?</span>
+            <span class="example-chip" data-query="Cómo resolver un conflicto entre empleados">Resolver conflicto</span>
+            <span class="example-chip" data-query="Trámites legales para abrir restaurante">Trámites legales</span>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages" id="messages">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="28" height="28" fill="none" stroke="var(--text-light)" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/>
+                    </svg>
+                </div>
+                <p>Escribe tu pregunta abajo o usa uno de los ejemplos anteriores.</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <div class="input-box">
+                    <textarea
+                        class="input-field"
+                        id="queryInput"
+                        placeholder="Escribe tu pregunta sobre restauración... (ej: ¿Cómo hacer un inventario valorado?)"
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" title="Enviar pregunta">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125a59.769 59.769 0 0 1 16.712-2.546.59.59 0 0 1 .698.804 59.759 59.759 0 0 1-2.69 17.616l-.536.54a.59.59 0 0 1-.708-.708l.54-.536a59.759 59.759 0 0 1 17.616-2.69.59.59 0 0 1 .804.698 59.769 59.769 0 0 1-2.546 16.712L21 21"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Asistente basado en búsqueda local sobre la <a href=".">Knowledge Base para Restaurantes</a>.
+    <br>Para personalización o soporte, <a href="mailto:david@example.com">contacta</a>.
+</div>
+
+<script>
+(function() {
+    const messagesEl = document.getElementById('messages');
+    const queryInput = document.getElementById('queryInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let searchIndex = null;
+    let docsStore = {};
+    let isProcessing = false;
+
+    const WELCOME_ANSWER = `Bienvenido al asistente de la Knowledge Base para Restaurantes. Estoy aquí para ayudarte con cualquier duda sobre operaciones de restauración, desde aperturas y protocolos diarios hasta finanzas, control de costes, gestión de equipo y atención al cliente.
+
+¿En qué puedo ayudarte hoy?`;
+
+    async function loadIndex() {
+        try {
+            const response = await fetch('./search/search_index.json');
+            if (!response.ok) throw new Error('Index not found');
+            const data = await response.json();
+            searchIndex = lunr.Index.load(data);
+            docsStore = {};
+            return true;
+        } catch (e) {
+            try {
+                const resp = await fetch('../search/search_index.json');
+                if (!resp.ok) throw new Error('Index not found');
+                const data = await resp.json();
+                searchIndex = lunr.Index.load(data);
+                docsStore = {};
+                return true;
+            } catch (e2) {
+                console.warn('Search index no disponible. El asistente funciona en modo demo.');
+                return false;
+            }
+        }
+    }
+
+    async function loadDocContent(docId) {
+        if (docsStore[docId]) return docsStore[docId];
+        try {
+            const paths = [
+                `./${docId}`,
+                `../${docId}`,
+                `./${docId}.md`,
+                `../${docId}.md`,
+                `./${docId}/index.md`,
+                `../${docId}/index.md`
+            ];
+            for (const path of paths) {
+                try {
+                    const resp = await fetch(path);
+                    if (resp.ok) {
+                        const text = await resp.text();
+                        docsStore[docId] = text;
+                        return text;
+                    }
+                } catch {}
+            }
+            return '';
+        } catch {
+            return '';
+        }
+    }
+
+    function cleanMarkdown(text) {
+        return text
+            .replace(/^---[\s\S]*?---\n/, '')
+            .replace(/```[\s\S]*?```/g, '')
+            .replace(/`[^`]+`/g, (m) => m.replace(/`/g, ''))
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            .replace(/\*([^*]+)\*/g, '$1')
+            .replace(/^#{1,6}\s+/gm, '')
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .replace(/\|.+\|/g, '')
+            .replace(/^[-*_]{3,}\s*$/gm, '')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }
+
+    function extractSnippet(text, query, length = 300) {
+        const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+        const cleanText = cleanMarkdown(text).toLowerCase();
+        let bestPos = 0;
+        let bestScore = 0;
+
+        for (const word of queryWords) {
+            const pos = cleanText.indexOf(word);
+            if (pos !== -1 && pos > bestPos) {
+                bestPos = pos;
+                bestScore++;
+            }
+        }
+
+        if (bestPos === 0) bestPos = Math.max(0, Math.floor(cleanText.length / 2) - length / 2);
+
+        const rawSnippet = cleanMarkdown(text).substring(bestPos, bestPos + length);
+        return rawSnippet.charAt(0).toUpperCase() + rawSnippet.slice(1) + (text.length > bestPos + length ? '...' : '');
+    }
+
+    async function search(query) {
+        if (!searchIndex) return [];
+
+        try {
+            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+            let queryStr = terms.join(' ');
+            if (terms.length > 1) {
+                queryStr = terms.map(t => `${t}*`).join(' ') + ' ' + query.toLowerCase();
+            }
+
+            let results = searchIndex.search(queryStr);
+            if (results.length === 0) {
+                results = searchIndex.search(terms[0]);
+            }
+            if (results.length === 0) {
+                results = searchIndex.search(terms[terms.length - 1]);
+            }
+
+            return results.slice(0, 4);
+        } catch {
+            return [];
+        }
+    }
+
+    async function generateAnswer(query) {
+        const results = await search(query);
+
+        if (results.length === 0) {
+            return {
+                text: `No he encontrado información específica para "${query}" en la base de conocimiento actual. Te recomiendo:
+
+- Reformular la pregunta con otros términos
+- Usar el buscador de la web (ícono de lupa en la esquina superior derecha)
+- Consultar los manuales directamente desde el [índice](../index.md)
+
+Si necesitas ayuda con un tema específico, [contacta](mailto:david@example.com) para una consulta personalizada.`,
+                citations: [],
+                docUrl: null
+            };
+        }
+
+        const topResult = results[0];
+        const docId = topResult.ref;
+        const content = await loadDocContent(docId);
+
+        if (!content) {
+            return {
+                text: `He encontrado información relevante en **${docId}** pero no puedo cargar el contenido completo. Te recomiendo consultar directamente el documento.`,
+                citations: [`${docId}`],
+                docUrl: `./${docId}`
+            };
+        }
+
+        const snippet = extractSnippet(content, query);
+        const docName = docId.replace(/^docs\//, '').replace(/\.md$/, '').replace(/\//g, '/');
+        const docUrl = `./${docName}.md`;
+
+        let answerText = snippet;
+
+        if (results.length > 1) {
+            answerText += '\n\n_También encontré información relacionada en:**';
+            results.slice(1, 3).forEach(r => {
+                answerText += `\n- *${r.ref.replace(/^docs\//, '').replace(/\.md$/, '').replace(/\//g, ' / ')}*`;
+            });
+            answerText += '`_';
+        }
+
+        return {
+            text: answerText,
+            citations: results.slice(0, 3).map(r => r.ref.replace(/^docs\//, '').replace(/\.md$/, '')),
+            docUrl: docUrl
+        };
+    }
+
+    function addMessage(role, content, docUrl, citations) {
+        const existingEmpty = messagesEl.querySelector('.empty-state');
+        if (existingEmpty) existingEmpty.remove();
+
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${role}`;
+
+        const avatarText = role === 'assistant' ? 'AI' : 'Tú';
+        const avatarIcon = role === 'assistant'
+            ? `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 1 0-1.898l3.24-3.242a4.5 4.5 0 0 1 4.765-.043Z"/></svg>`
+            : `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>`;
+
+        messageEl.innerHTML = `
+            <div class="message-avatar">${avatarIcon}</div>
+            <div class="message-content">
+                <div class="message-text">
+                    ${formatContent(content)}
+                    ${docUrl ? `<div class="citation"><strong>Fuente:</strong> <a href="${docUrl}" target="_blank">${docUrl.replace('./', '')}</a></div>` : ''}
+                </div>
+            </div>
+        `;
+
+        messagesEl.appendChild(messageEl);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function addLoadingMessage() {
+        const messageEl = document.createElement('div');
+        messageEl.className = 'message assistant loading-state';
+        messageEl.id = 'loadingMsg';
+        messageEl.innerHTML = `
+            <div class="message-avatar">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 1 0-1.898l3.24-3.242a4.5 4.5 0 0 1 4.765-.043Z"/>
+                </svg>
+            </div>
+            <div class="message-content">
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        `;
+        messagesEl.appendChild(messageEl);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeLoadingMessage() {
+        const el = document.getElementById('loadingMsg');
+        if (el) el.remove();
+    }
+
+    function formatContent(text) {
+        return text
+            .split('\n\n')
+            .filter(p => p.trim())
+            .map(p => {
+                if (p.startsWith('- ') || p.startsWith('* ')) {
+                    const items = p.split('\n').map(item => `<li>${item.replace(/^-\s*|\*\s*/, '')}</li>`).join('');
+                    return `<ul>${items}</ul>`;
+                }
+                if (/^\d+\./.test(p.trim())) {
+                    return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+                }
+                return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+            })
+            .join('');
+    }
+
+    async function handleQuery(query) {
+        if (isProcessing) return;
+        isProcessing = true;
+        sendBtn.disabled = true;
+
+        addMessage('user', query);
+
+        addLoadingMessage();
+
+        await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+
+        const answer = await generateAnswer(query);
+
+        removeLoadingMessage();
+        addMessage('assistant', answer.text, answer.docUrl, answer.citations);
+
+        isProcessing = false;
+        sendBtn.disabled = false;
+        queryInput.focus();
+    }
+
+    function autoResize() {
+        queryInput.style.height = 'auto';
+        queryInput.style.height = Math.min(queryInput.scrollHeight, 160) + 'px';
+    }
+
+    sendBtn.addEventListener('click', () => {
+        const query = queryInput.value.trim();
+        if (query && !isProcessing) {
+            queryInput.value = '';
+            autoResize();
+            handleQuery(query);
+        }
+    });
+
+    queryInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const query = queryInput.value.trim();
+            if (query && !isProcessing) {
+                queryInput.value = '';
+                autoResize();
+                handleQuery(query);
+            }
+        }
+    });
+
+    queryInput.addEventListener('input', autoResize);
+
+    document.querySelectorAll('.example-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const query = chip.dataset.query;
+            queryInput.value = query;
+            autoResize();
+            handleQuery(query);
+        });
+    });
+
+    loadIndex().then(loaded => {
+        if (loaded) {
+            console.log('Índice de búsqueda cargado correctamente.');
+        }
+    });
+
+    addMessage('assistant', WELCOME_ANSWER);
+})();
+</script>
+
+</body>
+</html>

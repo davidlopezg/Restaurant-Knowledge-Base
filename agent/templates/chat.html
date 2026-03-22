@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente IA - Knowledge Base Restaurantes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --olive: #325247;
+            --olive-light: #4a6a5e;
+            --cream: #fef9f1;
+            --surface-low: #f8f3eb;
+            --surface-high: #e7e2da;
+            --text-dark: #1e332c;
+            --text-mid: #4a4a42;
+            --text-light: #7a7a6e;
+            --terracotta: #9a5b35;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--olive) 0%, var(--olive-light) 100%);
+            padding: 1.25rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-inner h1 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.3rem;
+            color: var(--cream);
+            font-weight: 700;
+        }
+
+        .header-badge {
+            background: rgba(254,249,241,0.2);
+            color: var(--cream);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.7rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(254,249,241,0.3);
+        }
+
+        .main {
+            flex: 1;
+            max-width: 860px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .status-bar {
+            background: var(--surface-low);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.82rem;
+            color: var(--text-mid);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.ready { background: #4caf50; }
+        .status-dot.loading { background: #ff9800; animation: pulse 1s infinite; }
+        .status-dot.error { background: #f44336; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .chat-container {
+            background: var(--surface-low);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(30,51,44,0.10);
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--olive);
+            color: var(--cream);
+        }
+
+        .message.user .message-avatar {
+            background: var(--terracotta);
+            color: var(--cream);
+        }
+
+        .message-content {
+            background: var(--cream);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+        }
+
+        .message.user .message-content {
+            background: var(--olive);
+            color: var(--cream);
+        }
+
+        .message-text {
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .message-text p { margin-bottom: 0.75rem; }
+        .message-text p:last-child { margin-bottom: 0; }
+
+        .citation {
+            background: var(--surface-low);
+            border-left: 3px solid var(--olive-light);
+            padding: 0.6rem 0.85rem;
+            margin-top: 0.75rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.8rem;
+            color: var(--text-mid);
+        }
+
+        .citation strong {
+            color: var(--olive);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .citation a {
+            color: var(--olive);
+            text-decoration: none;
+        }
+
+        .citation a:hover {
+            text-decoration: underline;
+        }
+
+        .input-area {
+            padding: 1rem 1.5rem 1.5rem;
+            background: var(--cream);
+            border-top: 1px solid var(--surface-high);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            background: var(--surface-low);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            resize: none;
+            min-height: 52px;
+            max-height: 160px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            line-height: 1.5;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(50,82,71,0.4);
+            box-shadow: 0 0 0 3px rgba(50,82,71,0.08);
+        }
+
+        .input-field::placeholder { color: var(--text-light); }
+
+        .send-btn {
+            background: var(--olive);
+            color: var(--cream);
+            border: none;
+            border-radius: var(--radius-md);
+            width: 52px;
+            height: 52px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .send-btn:hover { background: var(--terracotta); transform: translateY(-1px); }
+        .send-btn:disabled { background: var(--surface-high); cursor: not-allowed; transform: none; }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.25rem 0;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--text-light);
+            border-radius: 50%;
+            animation: typing 1.2s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        .loading-msg {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .loading-msg .message-content {
+            background: var(--cream);
+            padding: 1rem 1.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <h1>Asistente IA</h1>
+        <span class="header-badge">Backend RAG</span>
+    </div>
+</div>
+
+<div class="main">
+    <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Conectando con el servidor...</span>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea class="input-field" id="queryInput"
+                    placeholder="Escribe tu pregunta... (ej: ¿Cómo calculo el food cost?)"
+                    rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" title="Enviar">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125a59.769 59.769 0 0 1 16.712-2.546.59.59 0 0 1 .698.804 59.769 59.769 0 0 1-2.69 17.616l-.536.54a.59.59 0 0 1-.708-.708l.54-.536a59.769 59.769 0 0 1 17.616-2.69.59.59 0 0 1 .804.698 59.769 59.769 0 0 1-2.546 16.712L21 21"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8000'
+        : window.location.origin;
+
+    const messagesEl = document.getElementById('messages');
+    const queryInput = document.getElementById('queryInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    let isProcessing = false;
+
+    async function checkHealth() {
+        try {
+            const resp = await fetch(`${API_URL}/health`);
+            if (resp.ok) {
+                const data = await resp.json();
+                statusDot.className = 'status-dot ready';
+                statusText.textContent = `Servidor activo — ${data.chunks} fragmentos indexados`;
+            } else {
+                throw new Error();
+            }
+        } catch {
+            statusDot.className = 'status-dot error';
+            statusText.textContent = 'Servidor no disponible. Ejecuta: cd agent && pip install -r requirements-agent.txt && python app.py';
+        }
+    }
+
+    function addMessage(role, content, sources) {
+        const html = sources && sources.length > 0
+            ? content.split('\n').map(p => `<p>${p}</p>`).join('') +
+              `<div class="citation"><strong>Fuentes:</strong> ${
+                  sources.map(s => `<a href="${API_URL}${s.url}" target="_blank">${s.source}</a>`).join(', ')
+              }</div>`
+            : content.split('\n').map(p => `<p>${p}</p>`).join('');
+
+        const msg = document.createElement('div');
+        msg.className = `message ${role}`;
+        msg.innerHTML = `
+            <div class="message-avatar">${role === 'assistant' ? 'AI' : 'Tú'}</div>
+            <div class="message-content"><div class="message-text">${html}</div></div>
+        `;
+        messagesEl.appendChild(msg);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function addLoading() {
+        const msg = document.createElement('div');
+        msg.className = 'message assistant loading-msg';
+        msg.id = 'loading';
+        msg.innerHTML = `
+            <div class="message-avatar">AI</div>
+            <div class="message-content">
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        `;
+        messagesEl.appendChild(msg);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeLoading() {
+        document.getElementById('loading')?.remove();
+    }
+
+    async function sendQuery(query) {
+        if (isProcessing) return;
+        isProcessing = true;
+        sendBtn.disabled = true;
+        addMessage('user', query);
+        addLoading();
+
+        try {
+            const resp = await fetch(`${API_URL}/ask`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: query, top_k: 3 }),
+            });
+
+            if (!resp.ok) throw new Error('Error en la respuesta');
+            const data = await resp.json();
+            removeLoading();
+            addMessage('assistant', data.answer, data.sources);
+        } catch (e) {
+            removeLoading();
+            addMessage('assistant', 'Error de conexión con el servidor. Asegúrate de que el backend está ejecutándose.');
+        }
+
+        isProcessing = false;
+        sendBtn.disabled = false;
+        queryInput.focus();
+    }
+
+    queryInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const q = queryInput.value.trim();
+            if (q) { queryInput.value = ''; sendQuery(q); }
+        }
+    });
+
+    sendBtn.addEventListener('click', () => {
+        const q = queryInput.value.trim();
+        if (q) { queryInput.value = ''; sendQuery(q); }
+    });
+
+    checkHealth();
+
+    addMessage('assistant', 'Bienvenido al asistente IA de la Knowledge Base para Restaurantes.\n\n¿En qué puedo ayudarte hoy?');
+})();
+</script>
+
+</body>
+</html>
